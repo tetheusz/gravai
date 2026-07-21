@@ -19,7 +19,7 @@
 import { logout } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { TopBarGatewayControls } from "@/components/dashboard/top-bar-gateway-controls";
-import { LogOut } from "lucide-react";
+import { LogOut, Orbit } from "lucide-react";
 
 export default function DashboardLayout({
   children,
@@ -28,8 +28,19 @@ export default function DashboardLayout({
 }) {
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="border-b">
-        <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6">
+      <header className="border-b border-border/80 bg-background/70 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+          <div className="mr-4 flex items-center gap-2.5">
+            <div className="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
+              <Orbit size={17} />
+            </div>
+            <div className="leading-tight">
+              <p className="text-sm font-semibold tracking-tight">GravAI</p>
+              <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                Data commerce
+              </p>
+            </div>
+          </div>
           <TopBarGatewayControls />
           <form action={logout}>
             <Button variant="ghost" size="icon" type="submit">
@@ -38,7 +49,7 @@ export default function DashboardLayout({
           </form>
         </div>
       </header>
-      <main className="flex-1 p-6">{children}</main>
+      <main className="flex-1 px-4 py-8 sm:px-6">{children}</main>
     </div>
   );
 }

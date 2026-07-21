@@ -1,10 +1,42 @@
-# Arc Nanopayments Demo
+# GravAI
 
-Demonstrate gasless USDC nanopayments using [Circle Nanopayments](https://www.circle.com/nanopayments) on Arc. A **LangChain agent** acts as the buyer, autonomously paying for paywalled resources, while a **Next.js web app** acts as the seller, exposing x402-protected endpoints and providing a seller dashboard to monitor payments and withdraw earnings.
+**Verified human demonstration data, purchased autonomously by AI agents.**
 
-Circle Gateway batches many signed offchain authorizations into a single onchain settlement, enabling economically viable sub-cent payments.
+GravAI is an agentic data marketplace on Arc testnet. A buyer agent pays a
+sub-cent USDC nanopayment for a human-work sample; a verifier evaluates the
+sample against a task rubric; only an approved delivery unlocks a second,
+larger USDC purchase for the full dataset.
 
-<img alt="Arc Nanopayments Demo dashboard" src="public/screenshot.png" />
+Circle Gateway batches signed off-chain USDC authorizations, making the
+sample-first procurement loop economically viable at nanopayment scale.
+
+> **Testnet prototype only.** No real human data or production funds should be
+> sent to this repository.
+
+## The autonomous loop
+
+```mermaid
+sequenceDiagram
+  participant B as Buyer agent
+  participant G as Circle Gateway / Arc
+  participant S as GravAI seller API
+  participant V as Verifier agent
+  B->>S: GET /sample
+  S-->>B: 402 payment challenge
+  B->>G: USDC nanopayment ($0.001)
+  G->>S: Settled sample request
+  S-->>B: Sample + SHA-256 provenance hash
+  B->>V: Submit sample + rubric
+  V-->>B: Approve or reject
+  alt Approved
+    B->>S: GET /dataset-full
+    B->>G: USDC nanopayment ($0.05)
+    G->>S: Settled full-delivery request
+    S-->>B: Dataset + provenance hash
+  else Rejected
+    B-->>B: Withhold full-dataset payment
+  end
+```
 
 ## Table of Contents
 
@@ -87,33 +119,28 @@ Circle Gateway batches many signed offchain authorizations into a single onchain
 
    The app will be available at `http://localhost:3000`.
 
-6. Run the AI payment agent:
+6. Run the GravAI autonomous purchase loop:
 
    ```bash
-   npm run agent
+   npm run gravai
    ```
 
-   The agent uses the buyer wallet to purchase resources from the x402-protected premium endpoints, paying with USDC on the Arc Testnet. If `OPENAI_API_KEY` is set, the agent uses the LLM to decide which tools to call; otherwise it falls back to a scripted mock run. You can optionally pass a custom query:
-
-   ```bash
-   npm run agent -- "Buy me a quote at http://localhost:3000/api/premium/quote"
-   ```
-
-   To set a USDC spending limit, use the `--limit` flag. The agent will pause when the limit is reached and prompt for additional allowance:
-
-   ```bash
-   npm run agent -- --limit 0.5
-   ```
+   The script creates an ephemeral buyer wallet, funds it, deposits USDC into
+   Circle Gateway, buys `/sample`, runs the verifier, and purchases
+   `/dataset-full` only on approval. It uses `OPENAI_API_KEY` when available
+   and falls back to a deterministic rubric evaluator if the provider is
+   unavailable.
 
 ## How It Works
 
-- Built with [Next.js](https://nextjs.org/) App Router and [Supabase](https://supabase.com/)
-- Uses the [x402 protocol](https://www.x402.org/) for HTTP 402 nanopayments with USDC on the [Arc Network](https://arc.circle.com/)
-- Uses [Circle's x402 batching SDK](https://www.npmjs.com/package/@circle-fin/x402-batching) (`GatewayClient`) for gasless payment facilitation
-- Includes an AI payment agent built with [LangChain](https://js.langchain.com/) and [Deep Agents](https://www.npmjs.com/package/deepagents) that can check balances, deposit USDC into Gateway, verify endpoint support, and autonomously pay for x402-protected resources
-- Seller dashboard with real-time payment monitoring, Gateway balance display, and cross-chain withdrawal support
-- Payment events and withdrawals are persisted to Supabase with real-time subscriptions
-- Styled with [Tailwind CSS](https://tailwindcss.com) and components from [shadcn/ui](https://ui.shadcn.com/)
+- [Next.js](https://nextjs.org/) App Router seller API and marketplace dashboard
+- [x402](https://www.x402.org/) + [Circle Gateway](https://developers.circle.com/gateway/nanopayments) for gasless USDC nanopayments on [Arc](https://arc.network/)
+- `@circle-fin/x402-batching`: `GatewayClient` on the buyer and
+  `BatchFacilitatorClient` on the seller
+- Verifier agent with an OpenAI evaluation path and a deterministic rubric
+  fallback for reliable demos
+- SHA-256 provenance manifests returned with the preview and full delivery
+- Supabase real-time settlement ledger and seller payout controls
 
 ## Paywalled Endpoints
 
@@ -121,10 +148,9 @@ The seller exposes several x402-protected API routes at different price points:
 
 | Endpoint | Method | Price (USDC) | Description |
 | --- | --- | --- | --- |
-| `/api/premium/quote` | GET | $0.001 | Returns a premium inspirational quote |
-| `/api/premium/dataset` | GET | $0.01 | Returns a small JSON analytics dataset |
-| `/api/premium/compute` | POST | $0.0003 | Performs text analysis on submitted content |
-| `/api/premium/agent-task` | GET | $0.03 | Returns a clue/step for a treasure hunt task |
+| `/api/premium/sample` | GET | $0.001 | Excel/FP&A pt-BR computer-use preview + provenance hash |
+| `/api/premium/dataset-full` | GET | $0.05 | Full delivery, available only after verifier approval |
+| `/api/premium/dataset` | GET | $0.01 | Legacy preview endpoint kept for compatibility |
 
 Each endpoint returns `402 Payment Required` for unpaid requests. The buyer agent automatically signs the authorization and retries with the payment signature to receive the content.
 
@@ -132,9 +158,12 @@ Each endpoint returns `402 Payment Required` for unpaid requests. The buyer agen
 
 The dashboard at `/dashboard` provides:
 
-- **Gateway Balance** — Top-bar badge showing the seller's available Gateway balance, with a detail dialog for total, withdrawing, withdrawable, and wallet USDC balances
-- **Payments Table** — Real-time list of incoming nanopayments with filtering and sorting, linked to [Arc Testnet Explorer](https://testnet.arcscan.app)
-- **Withdraw Dialog** — Withdraw available USDC from Gateway to a wallet address on any supported testnet chain (Arc Testnet, Base Sepolia, Ethereum Sepolia, Arbitrum Sepolia, Optimism Sepolia, Avalanche Fuji, Polygon Amoy)
+- **Marketplace state** — settled USDC, verified deliveries, buyer agents, and
+  approval-based seller reputation
+- **Settlement ledger** — real-time paid previews and full deliveries, linked to
+  [Arcscan](https://testnet.arcscan.app)
+- **Gateway payout controls** — inspect Gateway balances and withdraw to a
+  supported testnet address
 
 ## Environment Variables
 

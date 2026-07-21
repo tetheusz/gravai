@@ -93,7 +93,9 @@ export function TopBarGatewayControls() {
   return (
     <div className="flex flex-1 items-center justify-between gap-3 min-w-0">
       <div className="flex items-center gap-4 min-w-0">
-        <span className="font-semibold text-sm truncate">Arc Nanopayments</span>
+        <span className="hidden text-xs text-muted-foreground sm:inline">
+          Settlement via Arc Gateway
+        </span>
         <WithdrawDialog
           maxAvailable={balances?.gateway.available ?? "0"}
           onWithdraw={fetchBalances}

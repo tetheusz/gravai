@@ -6,7 +6,8 @@
     "start": "next start",
     "lint": "eslint .",
     "generate-wallets": "node --experimental-transform-types --no-warnings generate-wallets.mts",
-    "agent": "node --experimental-transform-types --no-warnings --env-file=.env.local agent.mts"
+    "agent": "node --experimental-transform-types --no-warnings --env-file=.env.local agent.mts",
+    "gravai": "node --experimental-transform-types --no-warnings --env-file=.env.local agents/gravai-loop.mts"
   },
   "dependencies": {
     "@circle-fin/x402-batching": "^2.0.4",

@@ -49,6 +49,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Copy,
+  ExternalLink,
+  ShieldCheck,
+  Sparkles,
+  CircleCheck,
   Loader2,
 } from "lucide-react";
 import { shortenHash } from "@/lib/utils";
@@ -150,6 +154,26 @@ export default function Dashboard() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(10);
 
+  const marketplaceStats = useMemo(() => {
+    const samplePurchases = events.filter((event) =>
+      event.endpoint.endsWith("/sample"),
+    );
+    const fullPurchases = events.filter((event) =>
+      event.endpoint.endsWith("/dataset-full"),
+    );
+    const totalSettled = events.reduce(
+      (total, event) => total + parseAmount(event.amount_usdc),
+      0,
+    );
+    const uniqueBuyers = new Set(events.map((event) => event.payer.toLowerCase())).size;
+    const approvalRate =
+      samplePurchases.length === 0
+        ? 0
+        : Math.min(100, Math.round((fullPurchases.length / samplePurchases.length) * 100));
+
+    return { approvalRate, fullPurchases, samplePurchases, totalSettled, uniqueBuyers };
+  }, [events]);
+
   function handleSort(field: SortField) {
     if (sortField === field) {
       const next = nextSortDirection(sortDirection);
@@ -239,19 +263,85 @@ export default function Dashboard() {
   }, [filteredWithdrawals, clampedPage, pageSize]);
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Welcome back!</h1>
-        <p className="text-muted-foreground text-sm">
-          Monitor incoming nanopayments and manage withdrawals.
-        </p>
-      </div>
+    <div className="mx-auto max-w-7xl">
+      <section className="mb-8 grid gap-6 border-b border-border/80 pb-8 lg:grid-cols-[1fr_auto] lg:items-end">
+        <div>
+          <div className="mb-3 inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-primary">
+            <span className="size-1.5 animate-pulse rounded-full bg-primary" />
+            Arc testnet · live settlement
+          </div>
+          <h1 className="max-w-2xl text-3xl font-semibold tracking-tight sm:text-4xl">
+            Verified human data, purchased by agents.
+          </h1>
+          <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
+            Monitor the GravAI loop: preview purchase, automated verification,
+            and gated USDC settlement for the full delivery.
+          </p>
+        </div>
+        <a
+          href="https://testnet.arcscan.app"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary"
+        >
+          Open Arcscan <ExternalLink size={14} />
+        </a>
+      </section>
+
+      <section className="mb-8 grid divide-y divide-border/80 border-y border-border/80 sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4">
+        <div className="py-4 sm:px-5 sm:first:pl-0">
+          <p className="text-xs uppercase tracking-[0.13em] text-muted-foreground">USDC settled</p>
+          <p className="mt-1 font-mono text-2xl tracking-tight">${marketplaceStats.totalSettled.toFixed(3)}</p>
+        </div>
+        <div className="py-4 sm:px-5">
+          <p className="text-xs uppercase tracking-[0.13em] text-muted-foreground">Verified deliveries</p>
+          <p className="mt-1 flex items-center gap-2 font-mono text-2xl tracking-tight">
+            {marketplaceStats.fullPurchases.length}
+            <CircleCheck size={18} className="text-primary" />
+          </p>
+        </div>
+        <div className="py-4 sm:px-5">
+          <p className="text-xs uppercase tracking-[0.13em] text-muted-foreground">Buyer agents</p>
+          <p className="mt-1 font-mono text-2xl tracking-tight">{marketplaceStats.uniqueBuyers}</p>
+        </div>
+        <div className="py-4 sm:px-5 sm:last:pr-0">
+          <p className="text-xs uppercase tracking-[0.13em] text-muted-foreground">Seller reputation</p>
+          <p className="mt-1 flex items-center gap-2 font-mono text-2xl tracking-tight">
+            {marketplaceStats.approvalRate}%
+            <ShieldCheck size={18} className="text-primary" />
+          </p>
+        </div>
+      </section>
+
+      <section className="mb-8 grid gap-5 border-b border-border/80 pb-8 lg:grid-cols-[1.25fr_0.75fr]">
+        <div className="border-l-2 border-primary pl-4">
+          <p className="text-xs font-medium uppercase tracking-[0.14em] text-primary">Active verification policy</p>
+          <p className="mt-2 text-sm font-medium">Excel/FP&amp;A narrated computer-use dataset · pt-BR</p>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">
+            A buyer pays for a low-cost sample. The verifier must score narration,
+            actions, completeness, and provenance above threshold before the full
+            dataset can be purchased.
+          </p>
+        </div>
+        <div className="flex items-start gap-3 border-l border-border/80 pl-4">
+          <Sparkles size={17} className="mt-0.5 text-primary" />
+          <div>
+            <p className="text-sm font-medium">Reputation v1</p>
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">
+              {marketplaceStats.fullPurchases.length} approved full{" "}
+              {marketplaceStats.fullPurchases.length === 1 ? "delivery" : "deliveries"} from{" "}
+              {marketplaceStats.samplePurchases.length} paid{" "}
+              {marketplaceStats.samplePurchases.length === 1 ? "preview" : "previews"}.
+            </p>
+          </div>
+        </div>
+      </section>
 
       <div className="flex items-center gap-3 mb-4">
         <Input
           placeholder={
             activeTab === "payments"
-              ? "Filter by tx hash, payer, or endpoint..."
+              ? "Filter by receipt, buyer, or delivery..."
               : "Filter by tx hash, address, chain, or status..."
           }
           className="max-w-xs"
@@ -289,8 +379,8 @@ export default function Dashboard() {
         }}
       >
         <TabsList className="w-full">
-          <TabsTrigger value="payments">Payments</TabsTrigger>
-          <TabsTrigger value="withdrawals">Withdrawals</TabsTrigger>
+          <TabsTrigger value="payments">Settlements</TabsTrigger>
+          <TabsTrigger value="withdrawals">Payouts</TabsTrigger>
         </TabsList>
 
         <TabsContent value="payments">
@@ -298,9 +388,9 @@ export default function Dashboard() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Transaction</TableHead>
-                  <TableHead>Payer</TableHead>
-                  <TableHead>Endpoint</TableHead>
+                  <TableHead>Settlement receipt</TableHead>
+                  <TableHead>Buyer agent</TableHead>
+                  <TableHead>Delivery stage</TableHead>
                   <TableHead className="text-right">
                     <button
                       className="inline-flex items-center gap-1 hover:text-foreground transition-colors ml-auto"
@@ -340,7 +430,7 @@ export default function Dashboard() {
                       colSpan={5}
                       className="h-24 text-center text-muted-foreground"
                     >
-                      No payments found.
+                      No settlements found.
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -490,7 +580,7 @@ export default function Dashboard() {
       {!loading && activeData.length > 0 && (
         <div className="flex items-center justify-between border-x border-b rounded-b-lg px-4 py-3 text-sm">
           <span className="text-muted-foreground">
-            {activeData.length} {activeTab === "payments" ? "transaction" : "withdrawal"}{activeData.length !== 1 ? "s" : ""} total
+            {activeData.length} {activeTab === "payments" ? "settlement" : "payout"}{activeData.length !== 1 ? "s" : ""} total
           </span>
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground">

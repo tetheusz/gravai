@@ -52,7 +52,9 @@ function buildPaymentRequirements(price: string) {
     asset: ARC_TESTNET_USDC,
     amount: amount.toString(),
     payTo: sellerAddress,
-    maxTimeoutSeconds: 345600,
+    // Circle Gateway requires >= 7 days of authorization validity
+    // (authorization_validity_too_short if shorter). 604800 = 7d; +100s buffer.
+    maxTimeoutSeconds: 604900,
     extra: {
       name: "GatewayWalletBatched",
       version: "1",
@@ -114,6 +116,11 @@ export function withGateway(
       );
 
       if (!verifyResult.isValid) {
+        console.error(
+          `[x402] verify FAILED for ${endpoint}: reason=${JSON.stringify(
+            verifyResult.invalidReason,
+          )} payer=${verifyResult.payer ?? "unknown"}`,
+        );
         return NextResponse.json(
           {
             error: "Payment verification failed",

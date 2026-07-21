@@ -28,8 +28,8 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Arc Nanopayments Demo",
-  description: "Arc nanopayments demo application",
+  title: "GravAI — Verified data commerce",
+  description: "Autonomous procurement of verified human demonstration data on Arc.",
 };
 
 const geistSans = Geist({
@@ -44,7 +44,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="pt-BR">
       <body className={`${geistSans.className} antialiased`}>
         <TooltipProvider>{children}</TooltipProvider>
         <Toaster richColors position="bottom-right" />

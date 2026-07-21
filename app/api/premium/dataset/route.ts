@@ -18,18 +18,14 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { withGateway } from "@/lib/x402";
+import { buildSampleDelivery } from "@/lib/gravai-data";
 
+/**
+ * Legacy path kept for demo compatibility — same payload as /api/premium/sample.
+ * Prefer /sample (preview) + /dataset-full (gated purchase).
+ */
 const handler = async (_req: NextRequest) => {
-  return NextResponse.json({
-    dataset: [
-      { id: 1, metric: "daily_active_users", value: 14200, unit: "users" },
-      { id: 2, metric: "avg_session_duration", value: 8.4, unit: "minutes" },
-      { id: 3, metric: "conversion_rate", value: 3.2, unit: "percent" },
-      { id: 4, metric: "revenue_per_user", value: 0.47, unit: "usd" },
-      { id: 5, metric: "churn_rate", value: 1.8, unit: "percent" },
-    ],
-    generated_at: new Date().toISOString(),
-  });
+  return NextResponse.json(buildSampleDelivery());
 };
 
 export const GET = withGateway(handler, "$0.01", "/api/premium/dataset");
