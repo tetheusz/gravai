@@ -19,6 +19,7 @@
 import { logout } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { TopBarGatewayControls } from "@/components/dashboard/top-bar-gateway-controls";
+import { LanguageSwitch } from "@/components/language-switch";
 import { LogOut, Orbit } from "lucide-react";
 
 export default function DashboardLayout({
@@ -42,11 +43,14 @@ export default function DashboardLayout({
             </div>
           </div>
           <TopBarGatewayControls />
-          <form action={logout}>
-            <Button variant="ghost" size="icon" type="submit">
-              <LogOut size={16} className="text-muted-foreground" />
-            </Button>
-          </form>
+          <div className="flex items-center gap-2">
+            <LanguageSwitch variant="light" />
+            <form action={logout}>
+              <Button variant="ghost" size="icon" type="submit">
+                <LogOut size={16} className="text-muted-foreground" />
+              </Button>
+            </form>
+          </div>
         </div>
       </header>
       <main className="flex-1 px-4 py-8 sm:px-6">{children}</main>

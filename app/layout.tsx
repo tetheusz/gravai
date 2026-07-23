@@ -19,6 +19,7 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { LocaleProvider } from "@/lib/i18n/locale-context";
 import { Toaster } from "sonner";
 import "./globals.css";
 
@@ -44,10 +45,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
+    <html lang="en">
       <body className={`${geistSans.className} antialiased`}>
-        <TooltipProvider>{children}</TooltipProvider>
-        <Toaster richColors position="bottom-right" />
+        <LocaleProvider>
+          <TooltipProvider>{children}</TooltipProvider>
+          <Toaster richColors position="bottom-right" />
+        </LocaleProvider>
       </body>
     </html>
   );

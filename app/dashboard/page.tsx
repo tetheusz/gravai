@@ -58,6 +58,7 @@ import {
 import { shortenHash } from "@/lib/utils";
 import { usePaymentEvents } from "@/hooks/use-transactions";
 import { useWithdrawals } from "@/hooks/use-withdrawals";
+import { AgentRunPanel } from "@/components/dashboard/agent-run-panel";
 
 type SortDirection = "default" | "asc" | "desc";
 type SortField = "amount" | "date";
@@ -140,6 +141,26 @@ function StatusBadge({ status }: { status: string }) {
         ? "destructive"
         : "secondary";
   return <Badge variant={variant}>{status}</Badge>;
+}
+
+function DeliveryStageBadge({ endpoint }: { endpoint: string }) {
+  if (endpoint.endsWith("/sample") || endpoint.endsWith("/dataset")) {
+    return (
+      <Badge variant="secondary" className="font-normal">
+        Sample preview
+      </Badge>
+    );
+  }
+  if (endpoint.endsWith("/dataset-full")) {
+    return (
+      <Badge className="font-normal">
+        Full dataset
+      </Badge>
+    );
+  }
+  return (
+    <code className="rounded bg-muted px-1.5 py-0.5 text-xs">{endpoint}</code>
+  );
 }
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const;
@@ -288,6 +309,16 @@ export default function Dashboard() {
         </a>
       </section>
 
+      <div className="mb-6 rounded-lg border border-primary/25 bg-primary/5 px-4 py-3 text-sm leading-6 text-muted-foreground">
+        <span className="font-medium text-foreground">Judge tip:</span> Run{" "}
+        <span className="text-foreground">Standard gate</span> to see approval +
+        full settlement, then <span className="text-foreground">Strict gate</span>{" "}
+        to watch the verifier withhold payment. Settlements land in the ledger
+        below in real time.
+      </div>
+
+      <AgentRunPanel />
+
       <section className="mb-8 grid divide-y divide-border/80 border-y border-border/80 sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4">
         <div className="py-4 sm:px-5 sm:first:pl-0">
           <p className="text-xs uppercase tracking-[0.13em] text-muted-foreground">USDC settled</p>
@@ -428,9 +459,13 @@ export default function Dashboard() {
                   <TableRow>
                     <TableCell
                       colSpan={5}
-                      className="h-24 text-center text-muted-foreground"
+                      className="h-28 text-center text-muted-foreground"
                     >
-                      No settlements found.
+                      <p>No settlements yet.</p>
+                      <p className="mt-1 text-xs">
+                        Click <span className="text-foreground">Run buyer agent</span> above
+                        to create the first live purchase on Arc testnet.
+                      </p>
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -459,9 +494,7 @@ export default function Dashboard() {
                         />
                       </TableCell>
                       <TableCell className="text-xs">
-                        <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
-                          {ev.endpoint}
-                        </code>
+                        <DeliveryStageBadge endpoint={ev.endpoint} />
                       </TableCell>
                       <TableCell className="text-right font-mono">
                         ${ev.amount_usdc}

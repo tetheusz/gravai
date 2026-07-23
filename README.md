@@ -197,16 +197,27 @@ BUYER_PRIVATE_KEY=0xYourBuyerPrivateKey
 | `BUYER_ADDRESS` | Agent | Buyer wallet address for making payments. |
 | `BUYER_PRIVATE_KEY` | Agent | Buyer wallet private key for signing payment authorizations. |
 | `OPENAI_API_KEY` | Agent | *(Optional)* OpenAI API key. If omitted, the agent runs in mock mode with scripted tool calls. |
+| `GEMINI_API_KEY` | Server | *(Preferred)* Gemini API key for the verifier agent. Falls back to OpenAI, then heuristic. |
+| `GEMINI_MODEL` | Server | *(Optional)* Gemini model id. Defaults to `gemini-flash-lite-latest`. |
 
 > **Tip:** Run `npm run generate-wallets` to auto-generate the `SELLER_ADDRESS`, `SELLER_PRIVATE_KEY`, `BUYER_ADDRESS`, and `BUYER_PRIVATE_KEY` values.
 
 ## Demo Credentials
 
-The app uses a hardcoded demo account for local development:
+Hackathon judges can open the dashboard without guessing credentials:
 
 | Email | Password |
 | --- | --- |
-| `admin@example.com` | `123456` |
+| `demo@gravai.app` | `demo` |
+
+The landing-page login modal also shows these credentials and offers a one-click **Enter as demo** button.
+
+### Quick judge path
+
+1. Open `/` → **Operator** → **Enter as demo**
+2. On `/dashboard`, click **Run buyer agent** (Standard gate) — sample unlocks, LLM verifies, full dataset settles
+3. Switch to **Strict gate** and run again — payment for the full dataset is withheld
+4. Watch settlements appear live in the ledger below
 
 ## Security & Usage Model
 

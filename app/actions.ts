@@ -20,18 +20,9 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { DEMO_OPERATOR } from "@/lib/demo-auth";
 
-const ADMIN_EMAIL = "admin@example.com";
-const ADMIN_PASSWORD = "123456";
-
-export async function login(formData: FormData) {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-
-  if (email !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
-    return { error: "Invalid credentials" };
-  }
-
+async function establishSession() {
   const cookieStore = await cookies();
   cookieStore.set("session", "authenticated", {
     httpOnly: true,
@@ -40,7 +31,23 @@ export async function login(formData: FormData) {
     path: "/",
     maxAge: 60 * 60 * 24, // 1 day
   });
+}
 
+export async function login(formData: FormData) {
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const password = String(formData.get("password") ?? "");
+
+  if (email !== DEMO_OPERATOR.email || password !== DEMO_OPERATOR.password) {
+    return { error: "invalid_credentials" };
+  }
+
+  await establishSession();
+  redirect("/dashboard");
+}
+
+/** One-click access for hackathon judges — no guessing required. */
+export async function loginAsDemo() {
+  await establishSession();
   redirect("/dashboard");
 }
 

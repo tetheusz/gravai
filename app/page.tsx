@@ -26,7 +26,6 @@ import {
   ChevronRight,
   CircleDollarSign,
   Clock3,
-  Copy,
   ExternalLink,
   Orbit,
   ShieldCheck,
@@ -34,7 +33,10 @@ import {
   Wallet,
   X,
 } from "lucide-react";
-import { login } from "./actions";
+import { login, loginAsDemo } from "./actions";
+import { DEMO_OPERATOR } from "@/lib/demo-auth";
+import { LanguageSwitch } from "@/components/language-switch";
+import { useLocale } from "@/lib/i18n/locale-context";
 
 declare global {
   interface Window {
@@ -49,6 +51,7 @@ function shortAddress(address: string) {
 }
 
 export default function Home() {
+  const { t } = useLocale();
   const [wallet, setWallet] = useState<string | null>(null);
   const [walletError, setWalletError] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -59,7 +62,7 @@ export default function Home() {
   async function connectWallet() {
     setWalletError(null);
     if (!window.ethereum) {
-      setWalletError("Instale uma carteira EVM, como MetaMask, para conectar.");
+      setWalletError(t("walletInstalled"));
       return;
     }
 
@@ -70,7 +73,7 @@ export default function Home() {
       });
       if (accounts[0]) setWallet(accounts[0]);
     } catch {
-      setWalletError("A conexão foi cancelada ou não pôde ser concluída.");
+      setWalletError(t("walletCancelled"));
     } finally {
       setIsConnecting(false);
     }
@@ -81,9 +84,15 @@ export default function Home() {
     setLoginError(null);
     const result = await login(formData);
     if (result?.error) {
-      setLoginError(result.error);
+      setLoginError(t("loginError"));
       setLoginPending(false);
     }
+  }
+
+  async function handleDemoLogin() {
+    setLoginPending(true);
+    setLoginError(null);
+    await loginAsDemo();
   }
 
   return (
@@ -108,17 +117,18 @@ export default function Home() {
         </Link>
 
         <div className="flex items-center gap-3">
+          <LanguageSwitch />
           <a
             href="#how-it-works"
-            className="hidden text-sm text-slate-400 transition-colors hover:text-white sm:block"
+            className="hidden text-sm text-slate-400 transition-colors hover:text-white md:block"
           >
-            Como funciona
+            {t("navHow")}
           </a>
           <button
             onClick={() => setShowLogin(true)}
-            className="hidden rounded-full border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:border-white/25 hover:text-white sm:block"
+            className="rounded-full border border-white/10 px-3 py-2 text-sm text-slate-300 transition hover:border-white/25 hover:text-white sm:px-4"
           >
-            Operador
+            {t("navOperator")}
           </button>
           <button
             onClick={connectWallet}
@@ -126,10 +136,10 @@ export default function Home() {
           >
             <Wallet size={16} />
             {isConnecting
-              ? "Conectando…"
+              ? t("connecting")
               : wallet
                 ? shortAddress(wallet)
-                : "Conectar carteira"}
+                : t("connectWallet")}
           </button>
         </div>
       </nav>
@@ -141,14 +151,13 @@ export default function Home() {
             Built on Arc · USDC-native
           </div>
           <h1 className="max-w-3xl text-5xl font-semibold leading-[0.98] tracking-[-0.055em] text-white sm:text-6xl lg:text-7xl">
-            Dados humanos.
+            {t("heroTitleLine1")}
             <br />
-            Comprados por <span className="text-[#b7ff5a]">agentes.</span>
+            {t("heroTitleLine2Before")}
+            <span className="text-[#b7ff5a]">{t("heroTitleLine2Accent")}</span>
           </h1>
           <p className="mt-7 max-w-xl text-base leading-7 text-slate-400 sm:text-lg">
-            GravAI permite que agentes descubram, verifiquem e comprem
-            demonstrações humanas para treinamento — com pagamento em USDC
-            liberado somente após uma avaliação de qualidade.
+            {t("heroBody")}
           </p>
 
           <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -156,7 +165,7 @@ export default function Home() {
               href="#how-it-works"
               className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-slate-950 transition hover:bg-slate-200"
             >
-              Ver o fluxo autônomo <ArrowRight size={17} />
+              {t("ctaFlow")} <ArrowRight size={17} />
             </a>
             <a
               href="https://github.com/tetheusz/gravai"
@@ -164,7 +173,7 @@ export default function Home() {
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 rounded-full px-5 py-3.5 text-sm font-medium text-slate-300 transition hover:text-white"
             >
-              Explorar o código <ExternalLink size={15} />
+              {t("ctaCode")} <ExternalLink size={15} />
             </a>
           </div>
           {walletError && (
@@ -174,15 +183,15 @@ export default function Home() {
           <div className="mt-12 flex flex-wrap items-center gap-x-8 gap-y-4 text-xs text-slate-500">
             <span className="inline-flex items-center gap-2">
               <ShieldCheck size={16} className="text-[#b7ff5a]" />
-              Proveniência SHA-256
+              {t("badgeProvenance")}
             </span>
             <span className="inline-flex items-center gap-2">
               <CircleDollarSign size={16} className="text-[#b7ff5a]" />
-              Nanopayments x402
+              {t("badgeNano")}
             </span>
             <span className="inline-flex items-center gap-2">
               <Sparkles size={16} className="text-[#b7ff5a]" />
-              Verificação por agente
+              {t("badgeVerify")}
             </span>
           </div>
         </div>
@@ -219,19 +228,19 @@ export default function Home() {
               <div className="mt-7 space-y-3">
                 <FlowStep
                   index="01"
-                  title="Preview adquirido"
+                  title={t("flowPreview")}
                   detail="Sample · 0.001 USDC"
                   complete
                 />
                 <FlowStep
                   index="02"
-                  title="Verificador aprova"
+                  title={t("flowVerifier")}
                   detail="Score 0.853 · rubric matched"
                   complete
                 />
                 <FlowStep
                   index="03"
-                  title="Dataset liberado"
+                  title={t("flowDataset")}
                   detail="Full delivery · 0.05 USDC"
                   active
                 />
@@ -256,29 +265,17 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
           <div className="max-w-2xl">
             <p className="text-xs font-medium uppercase tracking-[0.16em] text-[#b7ff5a]">
-              Payment follows proof
+              {t("howEyebrow")}
             </p>
             <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-white sm:text-4xl">
-              A qualidade decide se o dinheiro se move.
+              {t("howTitle")}
             </h2>
           </div>
 
           <div className="mt-12 grid gap-8 md:grid-cols-3">
-            <ProcessCard
-              number="01"
-              title="Sample"
-              text="O agente comprador paga uma amostra barata e recebe ações, narração e hash de proveniência."
-            />
-            <ProcessCard
-              number="02"
-              title="Verify"
-              text="O verificador aplica a rubrica de qualidade: contexto, ações, completude e utilidade."
-            />
-            <ProcessCard
-              number="03"
-              title="Settle"
-              text="Aprovado? O agente compra o dataset completo. Reprovado? O pagamento não acontece."
-            />
+            <ProcessCard number="01" title="Sample" text={t("howSample")} />
+            <ProcessCard number="02" title="Verify" text={t("howVerify")} />
+            <ProcessCard number="03" title="Settle" text={t("howSettle")} />
           </div>
         </div>
       </section>
@@ -286,10 +283,10 @@ export default function Home() {
       <section className="relative mx-auto flex max-w-7xl flex-col justify-between gap-8 px-6 py-16 sm:flex-row sm:items-end lg:px-8">
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.16em] text-[#b7ff5a]">
-            Agentic data economy
+            {t("ctaEyebrow")}
           </p>
           <h2 className="mt-3 max-w-xl text-3xl font-semibold tracking-[-0.04em] text-white">
-            Transforme trabalho humano em dados verificáveis para agentes.
+            {t("ctaTitle")}
           </h2>
         </div>
         <button
@@ -297,7 +294,9 @@ export default function Home() {
           className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full border border-[#b7ff5a]/30 bg-[#b7ff5a]/10 px-5 py-3 text-sm font-semibold text-[#d5ff9e] transition hover:bg-[#b7ff5a]/20"
         >
           <Wallet size={16} />
-          {wallet ? `Carteira: ${shortAddress(wallet)}` : "Conectar carteira"}
+          {wallet
+            ? `${t("walletLabel")}: ${shortAddress(wallet)}`
+            : t("connectWallet")}
         </button>
       </section>
 
@@ -321,34 +320,58 @@ export default function Home() {
             <button
               onClick={() => setShowLogin(false)}
               className="absolute right-5 top-5 text-slate-500 transition hover:text-white"
-              aria-label="Fechar login"
+              aria-label={t("loginClose")}
             >
               <X size={18} />
             </button>
             <p className="text-xs font-medium uppercase tracking-[0.16em] text-[#b7ff5a]">
-              Operator access
+              Demo access
             </p>
             <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white">
-              Abrir dashboard
+              {t("loginTitle")}
             </h2>
-            <form action={handleLogin} className="mt-6 space-y-4">
+            <div className="mt-4 rounded-2xl border border-[#b7ff5a]/25 bg-[#b7ff5a]/10 px-4 py-3 text-sm text-slate-200">
+              <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[#b7ff5a]">
+                {t("loginCreds")}
+              </p>
+              <p className="mt-2 font-mono text-xs leading-6">
+                email: {DEMO_OPERATOR.email}
+                <br />
+                {t("loginPasswordLabel")}: {DEMO_OPERATOR.password}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleDemoLogin}
+              disabled={loginPending}
+              className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#b7ff5a] px-4 py-3 text-sm font-semibold text-[#07110b] transition hover:bg-[#c7ff7c] disabled:opacity-60"
+            >
+              {loginPending ? t("loginEntering") : t("loginDemo")}{" "}
+              <ChevronRight size={16} />
+            </button>
+            <form action={handleLogin} className="mt-5 space-y-4">
               <label className="block">
                 <span className="mb-2 block text-sm text-slate-400">Email</span>
                 <input
                   name="email"
                   type="email"
                   required
-                  placeholder="admin@example.com"
+                  defaultValue={DEMO_OPERATOR.email}
+                  placeholder={DEMO_OPERATOR.email}
                   className="w-full rounded-xl border border-white/10 bg-[#080d16] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-[#b7ff5a]/60"
                 />
               </label>
               <label className="block">
-                <span className="mb-2 block text-sm text-slate-400">Senha</span>
+                <span className="mb-2 block text-sm text-slate-400">
+                  {t("loginPasswordField")}
+                </span>
                 <input
                   name="password"
-                  type="password"
+                  type="text"
                   required
-                  placeholder="••••••"
+                  defaultValue={DEMO_OPERATOR.password}
+                  placeholder={DEMO_OPERATOR.password}
+                  autoComplete="off"
                   className="w-full rounded-xl border border-white/10 bg-[#080d16] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-[#b7ff5a]/60"
                 />
               </label>
@@ -356,9 +379,10 @@ export default function Home() {
               <button
                 type="submit"
                 disabled={loginPending}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#b7ff5a] px-4 py-3 text-sm font-semibold text-[#07110b] transition hover:bg-[#c7ff7c] disabled:opacity-60"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-transparent px-4 py-3 text-sm font-semibold text-white transition hover:border-white/30 disabled:opacity-60"
               >
-                {loginPending ? "Entrando…" : "Entrar"} <ChevronRight size={16} />
+                {loginPending ? t("loginEntering") : t("loginEmail")}{" "}
+                <ChevronRight size={16} />
               </button>
             </form>
           </div>
