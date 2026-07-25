@@ -320,7 +320,55 @@ function footer(slide, n) {
   footer(s, 9);
 }
 
-// ─── 10. Close ───
+// ─── 10. Links for judging ───
+{
+  const s = baseSlide();
+  chip(s, "Final submission links", 0.6, 0.55, 8);
+  s.addText("Everything a judge needs — public, no private logins.", {
+    x: 0.55,
+    y: 0.95,
+    w: 12.2,
+    h: 0.8,
+    fontFace: FONT,
+    fontSize: 30,
+    bold: true,
+    color: TEXT,
+  });
+  const links = [
+    ["Repo", "https://github.com/tetheusz/gravai"],
+    ["Live app", "Deploy on Vercel → paste production URL in Encode + README"],
+    ["Deck", "Upload gravai-deck.pptx to Google Slides · anyone with the link"],
+    ["Video", "≤3 min · Standard approve + Strict withhold · YouTube/Loom"],
+  ];
+  links.forEach(([title, body], i) => {
+    const y = 2.1 + i * 1.05;
+    s.addShape("rect", { x: 0.6, y, w: 0.07, h: 0.85, fill: { color: MINT } });
+    s.addText(title, {
+      x: 0.85,
+      y,
+      w: 2.4,
+      h: 0.85,
+      fontFace: FONT,
+      fontSize: 16,
+      bold: true,
+      color: TEXT,
+      valign: "middle",
+    });
+    s.addText(body, {
+      x: 3.4,
+      y,
+      w: 9.3,
+      h: 0.85,
+      fontFace: FONT,
+      fontSize: 14,
+      color: MUTED,
+      valign: "middle",
+    });
+  });
+  footer(s, 10);
+}
+
+// ─── 11. Close ───
 {
   const s = baseSlide();
   s.addShape("rect", { x: 0, y: 0, w: 0.12, h: 7.5, fill: { color: MINT } });
@@ -344,16 +392,19 @@ function footer(slide, n) {
     fontSize: 20,
     color: MINT,
   });
-  s.addText("Matheus Procópio\ngithub.com/tetheusz/gravai · Agentic Economy Track", {
-    x: 0.9,
-    y: 5.6,
-    w: 10,
-    h: 0.8,
-    fontFace: FONT,
-    fontSize: 14,
-    color: MUTED,
-    lineSpacing: 22,
-  });
+  s.addText(
+    "Prototype fixtures + real USDC nanopayments on Arc testnet\nMatheus Procópio · github.com/tetheusz/gravai · Agentic Economy",
+    {
+      x: 0.9,
+      y: 5.4,
+      w: 11,
+      h: 0.9,
+      fontFace: FONT,
+      fontSize: 14,
+      color: MUTED,
+      lineSpacing: 22,
+    },
+  );
 }
 
 await pptx.writeFile({ fileName: "gravai-deck.pptx" });

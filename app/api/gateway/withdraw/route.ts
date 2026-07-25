@@ -23,6 +23,7 @@ import {
   GATEWAY_DOMAINS,
 } from "@circle-fin/x402-batching/client";
 import { createClient } from "@supabase/supabase-js";
+import { guardWithdraw } from "@/lib/demo-guard";
 
 const SUPPORTED_CHAIN_LABELS: Record<string, string> = {
   arcTestnet: "Arc Testnet",
@@ -40,6 +41,9 @@ const supabase = createClient(
 );
 
 export async function POST(req: NextRequest) {
+  const blocked = guardWithdraw(req);
+  if (blocked) return blocked;
+
   const privateKey = process.env.SELLER_PRIVATE_KEY;
   if (!privateKey) {
     return NextResponse.json(

@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { GatewayClient } from "@circle-fin/x402-batching/client";
 import { verifySample, type SamplePayload } from "@/lib/verifier";
+import { beginAgentRun } from "@/lib/demo-guard";
 
 /**
  * Runs the GravAI autonomous purchase loop server-side and streams every
@@ -9,7 +10,7 @@ import { verifySample, type SamplePayload } from "@/lib/verifier";
  * is released or withheld based on the verdict.
  */
 
-const MIN_GATEWAY_BALANCE = 100_000n; // 0.10 USDC in atomic units
+const MIN_GATEWAY_BALANCE = BigInt(100_000); // 0.10 USDC in atomic units
 const DEPOSIT_AMOUNT = "0.5";
 
 type SendEvent = (event: Record<string, unknown>) => void;
@@ -144,6 +145,9 @@ async function runLoop(send: SendEvent, origin: string, threshold: number) {
 }
 
 export async function POST(req: NextRequest) {
+  const gate = beginAgentRun(req);
+  if ("error" in gate) return gate.error;
+
   let scenario = "approve";
   try {
     const body = (await req.json()) as { scenario?: string };
@@ -165,8 +169,10 @@ export async function POST(req: NextRequest) {
         await runLoop(send, origin, threshold);
       } catch (err) {
         send({ type: "error", message: (err as Error).message });
+      } finally {
+        gate.release();
+        controller.close();
       }
-      controller.close();
     },
   });
 

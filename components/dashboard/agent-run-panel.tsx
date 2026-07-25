@@ -295,7 +295,34 @@ export function AgentRunPanel() {
     totalSpent: string;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [fundingWarning, setFundingWarning] = useState<string | null>(null);
   const startedRef = useRef(false);
+
+  const refreshFunding = useCallback(async () => {
+    try {
+      const res = await fetch("/api/agent/status");
+      if (!res.ok) return;
+      const data = (await res.json()) as {
+        funded?: boolean;
+        message?: string;
+        gatewayAvailable?: string;
+      };
+      if (data.funded === false) {
+        setFundingWarning(
+          data.message ??
+            `Buyer Gateway low (${data.gatewayAvailable ?? "?"} USDC). Top up before demo.`,
+        );
+      } else {
+        setFundingWarning(null);
+      }
+    } catch {
+      // ignore — run path still surfaces balance errors
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshFunding();
+  }, [refreshFunding]);
 
   useEffect(() => {
     if (!sampleClip) return;
@@ -410,6 +437,7 @@ export function AgentRunPanel() {
 
   const runAgent = useCallback(async () => {
     if (startedRef.current) return;
+    await refreshFunding();
     startedRef.current = true;
     setRunning(true);
     setSteps(initialSteps());
@@ -427,7 +455,14 @@ export function AgentRunPanel() {
         body: JSON.stringify({ scenario }),
       });
       if (!res.ok || !res.body) {
-        throw new Error(`Agent run failed to start (${res.status})`);
+        let message = `Agent run failed to start (${res.status})`;
+        try {
+          const payload = (await res.json()) as { error?: string };
+          if (payload.error) message = payload.error;
+        } catch {
+          // keep status message
+        }
+        throw new Error(message);
       }
 
       const reader = res.body.getReader();
@@ -449,16 +484,22 @@ export function AgentRunPanel() {
           }
         }
       }
+      void refreshFunding();
     } catch (err) {
       setError((err as Error).message);
     } finally {
       setRunning(false);
       startedRef.current = false;
     }
-  }, [scenario, handleEvent]);
+  }, [scenario, handleEvent, refreshFunding]);
 
   return (
     <section className="mb-8 border-b border-border/80 pb-8">
+      {fundingWarning && (
+        <div className="mb-4 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+          {fundingWarning}
+        </div>
+      )}
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.16em] text-primary">
