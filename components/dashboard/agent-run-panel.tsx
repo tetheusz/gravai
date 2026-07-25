@@ -496,7 +496,7 @@ export function AgentRunPanel() {
   return (
     <section className="mb-8 border-b border-border/80 pb-8">
       {fundingWarning && (
-        <div className="mb-4 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+        <div className="mb-4 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-900 dark:text-amber-100">
           {fundingWarning}
         </div>
       )}

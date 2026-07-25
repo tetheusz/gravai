@@ -9,6 +9,7 @@
     "agent": "node --experimental-transform-types --no-warnings --env-file=.env.local agent.mts",
     "deck": "node scripts/build-deck.mjs",
     "test:verifier": "node --experimental-transform-types --no-warnings scripts/test-verifier.mts",
+    "deploy": "vercel --prod",
     "gravai": "node --experimental-transform-types --no-warnings --env-file=.env.local agents/gravai-loop.mts"
   },
   "dependencies": {
